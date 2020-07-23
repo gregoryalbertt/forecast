@@ -156,7 +156,15 @@ SARIMA_b1 = arima('Constant',NaN,'ARLags',1,'D',1,'MALags',1,'SARLags',1440,'Sea
 SARIMA_b12 = arima('Constant',NaN,'ARLags',1:2,'D',1,'MALags',1:2,'SARLags',[1440,2880],'Seasonality',1440,'SMALags',[1440,2880],'Distribution','Gaussian');
 [SARIMA_b12,EstParamCov2,logL2,info2] = estimate(SARIMA_b12,IRRADIANCIA,'Display','off');
 
-ARIMA_IRRADIANCIA_SEL = SARIMA_b12;
+% SARIMA (5,1,5)(1,0,1)1440
+SARIMA_b13 = arima('Constant',NaN,'ARLags',1:5,'D',1,'MALags',1:5,'SARLags',1440,'Seasonality',0,'SMALags',1440,'Distribution','Gaussian');
+[SARIMA_b13,EstParamCov3,logL3,info3] = estimate(SARIMA_b13,IRRADIANCIA,'Display','off');
+
+% SARIMA (3,1,3)(1,1,1)1440
+SARIMA_b14 = arima('Constant',NaN,'ARLags',1:3,'D',1,'MALags',1:3,'SARLags',1440,'Seasonality',1440,'SMALags',1440,'Distribution','Gaussian');
+[SARIMA_b14,EstParamCov3,logL3,info3] = estimate(SARIMA_b14,IRRADIANCIA,'Display','off');
+%%
+ARIMA_IRRADIANCIA_SEL = SARIMA_b13;
 
 % %% 3. Diagnostico
 % % AIC e BIC
@@ -219,4 +227,20 @@ legend([h1 h2 h3],'Observed','Forecast',...
 title(['Day Ahead Forecasts and Approximate 95% '...
 			'Confidence Intervals'])
 hold off
+
+%% day plot 
+
+figure;
+plot(IRRADIANCIA((t-k):t))
+hold on
+plot(YF,'r')
+
+%%
+SARIMA_b14 = arima('Constant',NaN,'ARLags',1:3,'D',1,'MALags',1:3,'SARLags',1440,'Seasonality',1440,'SMALags',1440,'Distribution','Gaussian');
+[SARIMA_b14,EstParamCov3,logL3,info3] = estimate(SARIMA_b14,IRRADIANCIA,'Display','off');
+
+ARIMA_IRRADIANCIA_SEL = SARIMA_b14;
+
+k = 1440; % um dia
+[YF,YMSE] = forecast(ARIMA_IRRADIANCIA_SEL,k,'Y0',IRRADIANCIA(1:(T-k)));
 

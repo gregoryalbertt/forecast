@@ -51,39 +51,68 @@ IRRADIANCIA_ds = filter(D,IRRADIANCIA);
 %% plots
 figure;
 plot(IRRADIANCIA,'k');
-hold on
+set(gca,'XTick',0:1440:33119)
+set(gca,'XTickLabel',1:1:12)
+xlabel('Dia');
+ylabel('Irradiância 1º diff')
 
+figure;
 plot(IRRADIANCIA_d1,'b');
 
+figure;
 plot(IRRADIANCIA_d2,'r');
 
+figure;
 plot(IRRADIANCIA_ds,'r');
-
-hold off
 
 figure
 subplot(2,1,1)
 autocorr(IRRADIANCIA)
+title('Função de Autocorrelação (ACF)')
+xlabel('Atraso')
+ylabel('Autocorrelação')
 subplot(2,1,2)
 parcorr(IRRADIANCIA)
+title('Função de Autocorrelação Parcial (PACF)')
+xlabel('Atraso')
+ylabel('Autocorrelação Parcial')
 
 figure
 subplot(2,1,1)
 autocorr(IRRADIANCIA_d1)
+title('Função de Autocorrelação (ACF)')
+xlabel('Atraso')
+ylabel('Autocorrelação')
 subplot(2,1,2)
 parcorr(IRRADIANCIA_d1)
+title('Função de Autocorrelação Parcial (PACF)')
+xlabel('Atraso')
+ylabel('Autocorrelação Parcial')
 
 figure
 subplot(2,1,1)
 autocorr(IRRADIANCIA_d2)
+title('Função de Autocorrelação (ACF)')
+xlabel('Atraso')
+ylabel('Autocorrelação')
 subplot(2,1,2)
 parcorr(IRRADIANCIA_d2)
+title('Função de Autocorrelação Parcial (PACF)')
+xlabel('Atraso')
+ylabel('Autocorrelação Parcial')
 
 figure
 subplot(2,1,1)
 autocorr(IRRADIANCIA_ds)
+title('Função de Autocorrelação (ACF)')
+xlabel('Atraso')
+ylabel('Autocorrelação')
 subplot(2,1,2)
 parcorr(IRRADIANCIA_ds)
+title('Função de Autocorrelação Parcial (PACF)')
+xlabel('Atraso')
+ylabel('Autocorrelação Parcial')
+
 
 %% Testes
 
@@ -148,21 +177,27 @@ parcorr(IRRADIANCIA_ds)
 %% SARIMA
 seasonality = 1440;
 
-% SARIMA (1,1,1)(1,0,1)1440
-SARIMA_b1 = arima('Constant',NaN,'ARLags',1,'D',1,'MALags',1,'SARLags',1440,'Seasonality',0,'SMALags',1440,'Distribution','Gaussian');
-[SARIMA_b1,EstParamCov1,logL1,info1] = estimate(SARIMA_b1,IRRADIANCIA,'Display','off');
+% SARIMA (1,1,1)(1,1,1)1440
+SARIMA_b11 = arima('Constant',NaN,'ARLags',1,'D',1,'MALags',1,'SARLags',seasonality,'Seasonality',1440,'SMALags',seasonality,'Distribution','Gaussian');
+[SARIMA_b11,EstParamCov1,logL1,info1] = estimate(SARIMA_b11,IRRADIANCIA,'Display','off');
 
-% SARIMA (2,1,2)(2,1,2)1440
-SARIMA_b12 = arima('Constant',NaN,'ARLags',1:2,'D',1,'MALags',1:2,'SARLags',[1440,2880],'Seasonality',1440,'SMALags',[1440,2880],'Distribution','Gaussian');
+% SARIMA (2,1,2)(1,1,1)1440
+SARIMA_b12 = arima('Constant',NaN,'ARLags',1:2,'D',1,'MALags',1:2,'SARLags',seasonality,'Seasonality',1440,'SMALags',seasonality,'Distribution','Gaussian');
 [SARIMA_b12,EstParamCov2,logL2,info2] = estimate(SARIMA_b12,IRRADIANCIA,'Display','off');
 
-% SARIMA (5,1,5)(1,0,1)1440
-SARIMA_b13 = arima('Constant',NaN,'ARLags',1:5,'D',1,'MALags',1:5,'SARLags',1440,'Seasonality',0,'SMALags',1440,'Distribution','Gaussian');
+% SARIMA (3,1,3)(1,1,1)1440
+SARIMA_b13 = arima('Constant',NaN,'ARLags',1:3,'D',1,'MALags',1:3,'SARLags',seasonality,'Seasonality',1440,'SMALags',seasonality,'Distribution','Gaussian');
 [SARIMA_b13,EstParamCov3,logL3,info3] = estimate(SARIMA_b13,IRRADIANCIA,'Display','off');
 
-% SARIMA (3,1,3)(1,1,1)1440
-SARIMA_b14 = arima('Constant',NaN,'ARLags',1:3,'D',1,'MALags',1:3,'SARLags',1440,'Seasonality',1440,'SMALags',1440,'Distribution','Gaussian');
-[SARIMA_b14,EstParamCov3,logL3,info3] = estimate(SARIMA_b14,IRRADIANCIA,'Display','off');
+% SARIMA (4,1,4)(1,1,1)1440
+SARIMA_b14 = arima('Constant',NaN,'ARLags',1:4,'D',1,'MALags',1:4,'SARLags',seasonality,'Seasonality',1440,'SMALags',seasonality,'Distribution','Gaussian');
+[SARIMA_b14,EstParamCov4,logL4,info4] = estimate(SARIMA_b14,IRRADIANCIA,'Display','off');
+
+% SARIMA (5,1,5)(1,1,1)1440
+SARIMA_b15 = arima('Constant',NaN,'ARLags',1:5,'D',1,'MALags',1:5,'SARLags',seasonality,'Seasonality',1440,'SMALags',seasonality,'Distribution','Gaussian');
+[SARIMA_b15,EstParamCov5,logL5,info5] = estimate(SARIMA_b15,IRRADIANCIA,'Display','off');
+
+
 %%
 ARIMA_IRRADIANCIA_SEL = SARIMA_b13;
 
@@ -187,9 +222,13 @@ ARIMA_IRRADIANCIA_SEL = SARIMA_b13;
 % %ARIMA_IRRADIANCIA_SEL.Report.Fit
 %%
 % residuos
-residuals = infer(ARIMA_IRRADIANCIA_SEL,IRRADIANCIA);
+residuals_21 = infer(SARIMA_b1, IRRADIANCIA);
+residuals_22 = infer(SARIMA_b12, IRRADIANCIA);
+residuals_23 = infer(SARIMA_b13, IRRADIANCIA);
+residuals_24 = infer(SARIMA_b14,IRRADIANCIA);
+residuals_25 = infer(SARIMA_b15, IRRADIANCIA);
 
-% histograma dos residuos
+%% histograma dos residuos
 figure;
 histogram(residuals);
 
@@ -243,4 +282,127 @@ ARIMA_IRRADIANCIA_SEL = SARIMA_b14;
 
 k = 1440; % um dia
 [YF,YMSE] = forecast(ARIMA_IRRADIANCIA_SEL,k,'Y0',IRRADIANCIA(1:(T-k)));
+
+%% 
+[YF_b1,YMSE_b1] = forecast(SARIMA_b1,k,'Y0',IRRADIANCIA(1:(T-k)));
+[YF_b12,YMSE_b12] = forecast(SARIMA_b12,k,'Y0',IRRADIANCIA(1:(T-k)));
+[YF_b13,YMSE_b13] = forecast(SARIMA_b13,k,'Y0',IRRADIANCIA(1:(T-k)));
+%[YF_b14,YMSE_b14] = forecast(SARIMA_b14,k,'Y0',IRRADIANCIA(1:(T-k)));
+[YF_b15,YMSE_b15] = forecast(SARIMA_b15,k,'Y0',IRRADIANCIA(1:(T-k)));
+
+%% Plot resíduos
+%SARIMA (1,1,1)(2,0,2)
+% figure;
+% hist_21 = histogram(residuals_21);
+% title('Histograma SARIMA(1,1,1)(2,0,2)')
+[hQQ_21,pValueQQ_21] = lbqtest(residuals_21,'lags',(1:20));
+stdRes_21 = residuals_21/sqrt(SARIMA_b1.Variance);
+
+figure;
+subplot(3,2,[1,2]);
+plot(stdRes_21)
+title('Resíduos normalizados SARIMA(1,1,1)(2,0,2)')
+subplot(3,2,3);
+autocorr(residuals_21)
+title('ACF dos Resíduos')
+xlabel('Atraso')
+ylabel('ACF')
+subplot(3,2,4);
+qqplot(residuals_21);
+title('Gráfico QQ')
+xlabel('Quantidades normais padrão')
+ylabel('Quantidade de amostra de entrada')
+ylabel('Amostra de entrada')
+subplot(3,2,[5,6]);
+plot(pValueQQ_21, 'bo');
+title('Valores de p do teste Lung-Box')
+xlabel('Atraso')
+ylabel('p-valor')
+
+%% SARIMA (2,1,2)(2,1,2)
+% 
+% figure;
+% hist_22 = histogram(residuals_22);
+% title('Histograma SARIMA(1,1,1)(2,0,2)')
+[hQQ_22,pValueQQ_22] = lbqtest(residuals_22,'lags',(1:20));
+stdRes_22 = residuals_22/sqrt(SARIMA_b12.Variance);
+
+figure;
+subplot(3,2,[1,2]);
+plot(stdRes_22)
+title('Resíduos normalizados SARIMA(2,1,2)(2,1,2)')
+subplot(3,2,3);
+autocorr(residuals_22)
+title('ACF dos Resíduos')
+xlabel('Atraso')
+ylabel('ACF')
+subplot(3,2,4);
+qqplot(residuals_22);
+title('Gráfico QQ')
+xlabel('Quantidades normais padrão')
+ylabel('Quantidade de amostra de entrada')
+ylabel('Amostra de entrada')
+subplot(3,2,[5,6]);
+plot(pValueQQ_22, 'bo');
+title('Valores de p do teste Lung-Box')
+xlabel('Atraso')
+ylabel('p-valor')
+
+%% SARIMA (3,1,3)(2,1,2)
+% 
+% figure;
+% hist_23 = histogram(residuals_23);
+% title('Histograma SARIMA(3,1,3)(2,1,2)')
+[hQQ_23,pValueQQ_23] = lbqtest(residuals_23,'lags',(1:20));
+stdRes_23 = residuals_23/sqrt(SARIMA_b13.Variance);
+
+figure;
+subplot(3,2,[1,2]);
+plot(stdRes_23)
+title('Resíduos normalizados SARIMA(3,1,3)(2,1,2)')
+subplot(3,2,3);
+autocorr(residuals_23)
+title('ACF dos Resíduos')
+xlabel('Atraso')
+ylabel('ACF')
+subplot(3,2,4);
+qqplot(residuals_23);
+title('Gráfico QQ')
+xlabel('Quantidades normais padrão')
+ylabel('Quantidade de amostra de entrada')
+ylabel('Amostra de entrada')
+subplot(3,2,[5,6]);
+plot(pValueQQ_23, 'bo');
+title('Valores de p do teste Lung-Box')
+xlabel('Atraso')
+ylabel('p-valor')
+
+%% SARIMA (5,1,5)(2,1,2)
+% 
+% figure;
+% hist_23 = histogram(residuals_23);
+% title('Histograma SARIMA(3,1,3)(2,1,2)')
+[hQQ_25,pValueQQ_25] = lbqtest(residuals_25,'lags',(1:20));
+stdRes_25 = residuals_25/sqrt(SARIMA_b15.Variance);
+
+figure;
+subplot(3,2,[1,2]);
+plot(stdRes_25)
+title('Resíduos normalizados SARIMA(5,1,5)(2,1,2)')
+subplot(3,2,3);
+autocorr(residuals_25)
+title('ACF dos Resíduos')
+xlabel('Atraso')
+ylabel('ACF')
+subplot(3,2,4);
+qqplot(residuals_25);
+title('Gráfico QQ')
+xlabel('Quantidades normais padrão')
+ylabel('Quantidade de amostra de entrada')
+ylabel('Amostra de entrada')
+subplot(3,2,[5,6]);
+plot(pValueQQ_25, 'bo');
+title('Valores de p do teste Lung-Box')
+xlabel('Atraso')
+ylabel('p-valor')
 
